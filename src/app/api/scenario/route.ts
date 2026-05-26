@@ -10,7 +10,7 @@ import { calculateRates } from '@/lib/game-logic';
 import type { Countdown, RateSnapshot, Rates } from '@/types';
 
 const schema = z.object({
-  scenarioId: z.number().int().min(1).max(5),
+  scenarioId: z.number().int().min(1).max(10),
   action: z.enum(['activate', 'deactivate']),
 });
 
