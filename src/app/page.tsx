@@ -64,16 +64,6 @@ function CurrencyCard({
   );
 }
 
-function IndicatorDots({ direction, intensity }: { direction: 'up' | 'down' | 'neutral'; intensity: 1 | 2 | 3 }) {
-  if (direction === 'neutral') return <span className="text-slate-500 text-sm">→ Estable</span>;
-  const color = direction === 'up' ? 'text-emerald-400' : 'text-red-400';
-  const arrow = direction === 'up' ? '↑' : '↓';
-  return (
-    <span className={`${color} font-bold text-sm`}>
-      {arrow.repeat(intensity)} {direction === 'up' ? 'Sube' : 'Baja'}
-    </span>
-  );
-}
 
 /* ─── main page ────────────────────────────────────────────── */
 export default function StudentPage() {
@@ -664,15 +654,6 @@ export default function StudentPage() {
                 {activeNewsScenario.concept}
               </span>
               <p className="text-xs text-slate-400 leading-relaxed">{activeNewsScenario.description}</p>
-              {/* Market indicators */}
-              <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-800">
-                {activeNewsScenario.indicators.map((ind) => (
-                  <div key={ind.currency} className="text-center">
-                    <div className="text-xs text-slate-500 mb-1">{ind.currency.toUpperCase()}</div>
-                    <IndicatorDots direction={ind.direction} intensity={ind.intensity} />
-                  </div>
-                ))}
-              </div>
               <div className="bg-slate-800 rounded-lg p-3 text-xs text-slate-300 leading-relaxed italic border-l-2 border-sky-500">
                 💭 {activeNewsScenario.question}
               </div>
