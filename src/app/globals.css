@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+body {
+  background-color: #020617;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* Flash animations for price changes */
+@keyframes flash-up {
+  0%   { background-color: rgba(52, 211, 153, 0.25); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-down {
+  0%   { background-color: rgba(248, 113, 113, 0.25); }
+  100% { background-color: transparent; }
+}
+.flash-up   { animation: flash-up   1.2s ease-out; }
+.flash-down { animation: flash-down 1.2s ease-out; }
+
+/* Pulse for countdown */
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.5); }
+  50%       { border-color: rgba(239, 68, 68, 1); }
+}
+.pulse-border { animation: pulse-border 1s ease-in-out infinite; }
