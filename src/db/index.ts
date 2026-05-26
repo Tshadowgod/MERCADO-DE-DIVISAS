@@ -17,7 +17,7 @@ function getInstance(): DbInstance {
 export const db = new Proxy({} as DbInstance, {
   get(_target, prop: string) {
     const instance = getInstance();
-    const value = (instance as Record<string, unknown>)[prop];
+    const value = (instance as unknown as Record<string, unknown>)[prop];
     if (typeof value === 'function') {
       return (value as (...args: unknown[]) => unknown).bind(instance);
     }
