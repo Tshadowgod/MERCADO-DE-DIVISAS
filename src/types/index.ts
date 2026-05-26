@@ -48,6 +48,7 @@ export interface GameState {
 }
 
 export interface LeaderboardEntry {
+  id: number;
   name: string;
   totalBob: number;
   portfolio: Portfolio;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Play, Square, RotateCcw, Users, TrendingUp, TrendingDown,
-  RefreshCw, LogIn, CheckCircle2, AlertCircle, Trophy, ChevronUp, ChevronDown,
+  RefreshCw, LogIn, CheckCircle2, AlertCircle, Trophy, ChevronUp, ChevronDown, UserX,
 } from 'lucide-react';
 import type { GameState, LeaderboardEntry, Currency, Countdown } from '@/types';
 import { SCENARIOS, BASE_RATES, INITIAL_BOB } from '@/lib/scenarios';
@@ -125,6 +125,24 @@ export default function AdminPage() {
       }
     } catch { setActionMsg({ ok: false, text: 'Error de conexión' }); }
     finally { setTimeout(() => setActionMsg(null), 3000); }
+  };
+
+  const kickPlayer = async (playerId: number, playerName: string) => {
+    if (!adminPw) return;
+    if (!confirm(`¿Sacar a "${playerName}" de la partida?`)) return;
+    try {
+      const res = await fetch('/api/player', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPw },
+        body: JSON.stringify({ playerId }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setActionMsg({ ok: true, text: `"${playerName}" fue removido de la partida.` });
+        setTimeout(() => setActionMsg(null), 3000);
+        await poll();
+      }
+    } catch { /* ignore */ }
   };
 
   const scenarioAction = async (id: number, action: 'activate' | 'deactivate') => {
@@ -463,13 +481,14 @@ export default function AdminPage() {
                   <th className="px-4 py-2.5 text-right">CNY</th>
                   <th className="px-4 py-2.5 text-right font-bold">Total BOB</th>
                   <th className="px-4 py-2.5 text-right">G/P</th>
+                  <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {leaderboard.map((e, i) => {
                   const pl = e.totalBob - INITIAL_BOB;
                   return (
-                    <tr key={e.name} className="border-t border-white/[0.05] hover:bg-white/[0.03] transition-colors">
+                    <tr key={e.name} className="border-t border-white/[0.05] hover:bg-white/[0.03] transition-colors group">
                       <td className="px-4 py-2.5 text-white/30 font-mono">
                         {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
                       </td>
@@ -481,6 +500,15 @@ export default function AdminPage() {
                       <td className="px-4 py-2.5 text-right text-white font-bold">Bs {fmt(e.totalBob)}</td>
                       <td className={`px-4 py-2.5 text-right font-bold ${pl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {pl >= 0 ? '+' : ''}Bs {fmt(pl)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <button
+                          onClick={() => kickPlayer(e.id, e.name)}
+                          title={`Sacar a ${e.name}`}
+                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-red-400/10 hover:bg-red-400/25 border border-red-400/20 text-red-400 transition-all"
+                        >
+                          <UserX size={13} />
+                        </button>
                       </td>
                     </tr>
                   );

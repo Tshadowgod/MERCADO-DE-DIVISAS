@@ -106,6 +106,7 @@ export async function GET(request: Request) {
   const rates = game.rates as Rates;
   const leaderboard = allPlayers
     .map((p) => ({
+      id: p.id,
       name: p.name,
       totalBob: parseFloat(
         portfolioValue({ bob: p.bob, usd: p.usd, eur: p.eur, cny: p.cny }, rates).toFixed(2),
