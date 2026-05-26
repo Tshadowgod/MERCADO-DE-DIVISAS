@@ -299,19 +299,100 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Rates + ended controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {game?.status === 'ended' && (
-            <div className="glass rounded-2xl p-4 flex flex-col gap-3">
-              <div className="text-sm font-semibold text-white/60">La partida ha finalizado</div>
+        {/* Final leaderboard when game ended */}
+        {game?.status === 'ended' && (
+          <div className="rounded-2xl border border-yellow-400/25 bg-yellow-500/[0.05] backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/40">
+            <div className="px-5 py-4 bg-white/[0.04] border-b border-yellow-400/15 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 font-bold text-yellow-400 text-base">
+                <Trophy size={18} className="text-yellow-400" />
+                Tabla de Posiciones Final
+              </div>
               <button
                 onClick={() => gameAction('reset')}
-                className="flex items-center justify-center gap-2 py-3 bg-white/[0.08] hover:bg-white/[0.13] border border-white/[0.10] text-white font-bold rounded-xl transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white/70 font-semibold rounded-xl transition-all text-sm"
               >
-                <RotateCcw size={15} /> Nueva Partida
+                <RotateCcw size={13} /> Nueva Partida
               </button>
             </div>
-          )}
+
+            {/* Podium top 3 */}
+            {leaderboard.length > 0 && (
+              <div className="px-5 pt-5 pb-3 grid grid-cols-3 gap-3">
+                {[1, 0, 2].map((rank) => {
+                  const e = leaderboard[rank];
+                  if (!e) return <div key={rank} />;
+                  const pl = e.totalBob - INITIAL_BOB;
+                  const medals = ['🥇', '🥈', '🥉'];
+                  const heights = ['h-28', 'h-20', 'h-16'];
+                  const colors = [
+                    'border-yellow-400/40 bg-yellow-400/[0.07]',
+                    'border-slate-400/30 bg-slate-400/[0.05]',
+                    'border-amber-600/30 bg-amber-600/[0.05]',
+                  ];
+                  return (
+                    <div key={rank} className={`rounded-2xl border ${colors[rank]} flex flex-col items-center justify-end p-3 gap-1.5 ${heights[rank]} relative`}>
+                      <div className="absolute -top-3 text-2xl">{medals[rank]}</div>
+                      <div className="text-white/90 font-bold text-xs text-center truncate max-w-full">{e.name}</div>
+                      <div className="text-white font-bold text-sm">Bs {fmt(e.totalBob)}</div>
+                      <div className={`text-[11px] font-semibold ${pl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {pl >= 0 ? '+' : ''}Bs {fmt(pl)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Full rankings table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-white/25 border-t border-white/[0.06] uppercase tracking-wider">
+                    <th className="px-4 py-2.5 text-left">#</th>
+                    <th className="px-4 py-2.5 text-left">Nombre</th>
+                    <th className="px-4 py-2.5 text-right">BOB</th>
+                    <th className="px-4 py-2.5 text-right">USD</th>
+                    <th className="px-4 py-2.5 text-right">EUR</th>
+                    <th className="px-4 py-2.5 text-right">CNY</th>
+                    <th className="px-4 py-2.5 text-right font-bold">Total BOB</th>
+                    <th className="px-4 py-2.5 text-right">G/P</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaderboard.map((e, i) => {
+                    const pl = e.totalBob - INITIAL_BOB;
+                    const isTop3 = i < 3;
+                    return (
+                      <tr key={e.name} className={`border-t border-white/[0.05] ${isTop3 ? 'bg-white/[0.03]' : ''}`}>
+                        <td className="px-4 py-3 font-mono">
+                          {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : <span className="text-white/30">{`#${i + 1}`}</span>}
+                        </td>
+                        <td className={`px-4 py-3 font-medium ${isTop3 ? 'text-white' : 'text-white/65'}`}>{e.name}</td>
+                        <td className="px-4 py-3 text-right text-white/40 font-mono">{fmt(e.portfolio.bob)}</td>
+                        <td className="px-4 py-3 text-right text-sky-400 font-mono">{fmt(e.portfolio.usd, 4)}</td>
+                        <td className="px-4 py-3 text-right text-violet-400 font-mono">{fmt(e.portfolio.eur, 4)}</td>
+                        <td className="px-4 py-3 text-right text-amber-400 font-mono">{fmt(e.portfolio.cny, 4)}</td>
+                        <td className="px-4 py-3 text-right text-white font-bold">Bs {fmt(e.totalBob)}</td>
+                        <td className={`px-4 py-3 text-right font-bold ${pl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {pl >= 0 ? '+' : ''}Bs {fmt(pl)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {leaderboard.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-6 text-center text-white/25">Sin jugadores</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Rates + ended controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {false && (
           <div className={`glass rounded-2xl p-4 ${game?.status === 'ended' ? '' : 'md:col-span-2'}`}>
             <div className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Tipos de Cambio Actuales</div>
             <div className="grid grid-cols-3 gap-4">
