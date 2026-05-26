@@ -3,9 +3,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest } from 'next/server';
 import { db } from '@/db';
 import { games, players, transactions } from '@/db/schema';
-import { eq, ne, desc } from 'drizzle-orm';
+import { eq, ne, desc, and, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import type { Rates } from '@/types';
+import { calculateRates } from '@/lib/game-logic';
+import { SCENARIOS } from '@/lib/scenarios';
+import type { Rates, Countdown, RateSnapshot, NewsItem } from '@/types';
 
 const schema = z.object({
   currency: z.enum(['usd', 'eur', 'cny']),
@@ -76,6 +78,69 @@ export async function POST(req: NextRequest) {
     rate,
     bobChange: action === 'buy' ? -bobChange : bobChange,
   });
+
+  // Check if all players have traded during the active countdown
+  const cd = game.countdown as Countdown | null;
+  if (cd && !cd.applied) {
+    const allPlayers = await db
+      .select({ id: players.id })
+      .from(players)
+      .where(eq(players.gameId, game.id));
+
+    const totalPlayers = allPlayers.length;
+
+    if (totalPlayers > 0) {
+      const allPlayerIds = allPlayers.map((p) => p.id);
+      const countdownStart = new Date(cd.startedAt);
+
+      const tradedDuring = await db
+        .select({ playerId: transactions.playerId })
+        .from(transactions)
+        .where(
+          and(
+            inArray(transactions.playerId, allPlayerIds),
+            sql`${transactions.createdAt} >= ${countdownStart}`
+          )
+        )
+        .groupBy(transactions.playerId);
+
+      if (tradedDuring.length >= totalPlayers) {
+        // All players traded — apply scenario immediately
+        const newActive = [...(game.activeScenarios as number[]), cd.scenarioId];
+        const newRates = calculateRates(newActive);
+        const history = game.rateHistory as RateSnapshot[];
+        const newHistory: RateSnapshot[] = [
+          ...history,
+          { label: `E${history.length}`, ...newRates, timestamp: new Date().toISOString() },
+        ];
+        const scenario = SCENARIOS.find((s) => s.id === cd.scenarioId);
+        const newsItem: NewsItem = {
+          id: String(cd.scenarioId),
+          time: new Date().toLocaleTimeString('es-BO'),
+          title: scenario?.title ?? '',
+          description: scenario?.description ?? '',
+          concept: scenario?.concept ?? '',
+          icon: scenario?.icon ?? '📰',
+        };
+        const prevNews = (game.news as NewsItem[]).filter((n) => n.id !== newsItem.id);
+        const newNews: NewsItem[] = [newsItem, ...prevNews].slice(0, 10);
+
+        await db
+          .update(games)
+          .set({
+            activeScenarios: newActive,
+            rates: newRates,
+            rateHistory: newHistory,
+            news: newNews,
+            countdown: { ...cd, applied: true },
+            updatedAt: new Date(),
+          })
+          .where(
+            and(eq(games.id, game.id), sql`(countdown->>'applied')::boolean = false`)
+          );
+      }
+    }
+  }
 
   const label = action === 'buy' ? 'Compraste' : 'Vendiste';
   return Response.json({
