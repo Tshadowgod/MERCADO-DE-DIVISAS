@@ -390,29 +390,26 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Rates + ended controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {false && (
-          <div className={`glass rounded-2xl p-4 ${game?.status === 'ended' ? '' : 'md:col-span-2'}`}>
-            <div className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Tipos de Cambio Actuales</div>
-            <div className="grid grid-cols-3 gap-4">
-              {(['usd', 'eur', 'cny'] as Currency[]).map((c) => {
-                const pct = pctChange(rates[c], BASE_RATES[c]);
-                const up = pct >= 0;
-                const flags: Record<Currency, string> = { usd: '🇺🇸', eur: '🇪🇺', cny: '🇨🇳' };
-                const colors: Record<Currency, string> = { usd: 'text-sky-300', eur: 'text-violet-300', cny: 'text-amber-300' };
-                return (
-                  <div key={c} className="text-center">
-                    <div className="text-xs text-white/35 mb-1">{flags[c]} {c.toUpperCase()}</div>
-                    <div className={`text-xl font-bold ${colors[c]}`}>Bs {fmt(rates[c], 4)}</div>
-                    <div className={`text-xs font-bold flex items-center justify-center gap-0.5 mt-0.5 ${up ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {up ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-                      {up ? '+' : ''}{fmt(pct, 2)}%
-                    </div>
+        {/* Rates */}
+        <div className="glass rounded-2xl p-4">
+          <div className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Tipos de Cambio Actuales</div>
+          <div className="grid grid-cols-3 gap-4">
+            {(['usd', 'eur', 'cny'] as Currency[]).map((c) => {
+              const pct = pctChange(rates[c], BASE_RATES[c]);
+              const up = pct >= 0;
+              const flags: Record<Currency, string> = { usd: '🇺🇸', eur: '🇪🇺', cny: '🇨🇳' };
+              const colors: Record<Currency, string> = { usd: 'text-sky-300', eur: 'text-violet-300', cny: 'text-amber-300' };
+              return (
+                <div key={c} className="text-center">
+                  <div className="text-xs text-white/35 mb-1">{flags[c]} {c.toUpperCase()}</div>
+                  <div className={`text-xl font-bold ${colors[c]}`}>Bs {fmt(rates[c], 4)}</div>
+                  <div className={`text-xs font-bold flex items-center justify-center gap-0.5 mt-0.5 ${up ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {up ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                    {up ? '+' : ''}{fmt(pct, 2)}%
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -545,8 +542,8 @@ export default function AdminPage() {
           })}
         </div>
 
-        {/* Live leaderboard */}
-        <div className="glass rounded-2xl overflow-hidden">
+        {/* Live leaderboard (hidden when game is ended — final table shown above) */}
+        {game?.status !== 'ended' && <div className="glass rounded-2xl overflow-hidden">
           <div className="px-4 py-3 bg-white/[0.04] border-b border-white/[0.07] flex items-center gap-2 text-xs font-bold text-white/50 uppercase tracking-wider">
             <Trophy size={13} className="text-yellow-400" /> Clasificación en Vivo ({leaderboard.length} jugadores)
           </div>
@@ -604,7 +601,7 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );
